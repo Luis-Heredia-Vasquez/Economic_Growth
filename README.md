@@ -51,12 +51,11 @@ The gray areas, in the image above,  represent U.S. recessions. Inflation drops 
 
 ![inflation_plot_visualization](https://github.com/user-attachments/assets/7fdf00d5-71df-46e8-8678-fc52f54705a5)
 ![plot_regression_inflation](https://github.com/user-attachments/assets/d1985d16-7f2b-4607-a653-d21fefd33533)
-
-![multi_regression_plot_high_quality](https://github.com/user-attachments/assets/944e5c75-951f-4675-ab0f-69c963d0a781)
 ![NET_MIGRATION_REGRESSION](https://github.com/user-attachments/assets/5e5d2bf4-bf69-45f5-a9f5-7a1b54199c0e)
 ![netmigration_plot_visualization](https://github.com/user-attachments/assets/a7410d3d-9ebf-4480-b02f-f3e36c4c5bb5)
 ![unrate_plot_visualization](https://github.com/user-attachments/assets/8ece5151-85a1-4426-905f-a01fb2425f00)
 ![UR_REGRESSION](https://github.com/user-attachments/assets/981d4fc1-0624-4cd5-bf2a-06ebd2ca04a4)
+![multi_regression_plot_high_quality](https://github.com/user-attachments/assets/944e5c75-951f-4675-ab0f-69c963d0a781)
 
 
 # **TECHNOLOGY USED
