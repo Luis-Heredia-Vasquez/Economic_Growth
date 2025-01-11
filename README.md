@@ -1,5 +1,5 @@
-# **ECONOMIC GROWTH - DATA VISUALIZATION AND ANALYSIS
-# **Overview
+# **THE INFLUENCE OF NET MIGRATION, UNEMPLOYMENT, AND INFLATION ON ECONOMIC GROWTH
+# **OVERVIEW
 This project investigates the dynamic interplay between net migration, unemployment rates, and inflation, focusing on their collective impact on economic growth in the United States. Using time-series data spanning from 1961 to 2023, the study examines how these variables influence real GDP trends, providing valuable insights into economic drivers and the implications of policy decisions.
 
 # **DATA USED 
@@ -18,7 +18,36 @@ Net Migration: https://data.worldbank.org/indicator/SM.POP.NETM?locations=us , p
 # **SUMMARYY STATISTICS
 ![image](https://github.com/user-attachments/assets/082f3ab9-382d-4075-b804-c1cd72dde053)
 
-This data set contains 63 observations and four different variables. GDP Growth averages at about 3.03%, which is higher than the median, indicating the presence of outliers. This is typically reflected by a slight positive skew. It also has moderate variation shown by a standard deviation of 2.11, and has a minimum value of  -2.58%, indicating a recession and a maximum of 7.24%, indicating an expansion. Net Migration has a mean of positive 2.47%, meaning that there are more people entering the country, since it is calculated by the number of immigrants minus the number of emigrants. It has a negative median, suggesting that there is a decrease in net migration compared to prior periods. Because we used percentage change as our unit of measurement, we see a high standard deviation. Unemployment Rate is mostly stable with a mean of 5.92%, which is close to the median of 5.62%. It also has a narrow range (3.49% to 9.71%) and low variability (SD: 1.63). Lastly, Inflation has an average of 3.81%, close to the median, with moderate variability (SD: 2.77), spanning deflationary periods (-0.36%) to high inflation (13.55%). 
+General Information:
+
+Contains 63 observations across 4 variables.
+GDP Growth:
+
+Mean: 3.03% (higher than the median, indicating outliers).
+Skew: Slight positive skew.
+Variation: Standard deviation (SD): 2.11.
+Range: Minimum -2.58% (recession) to maximum 7.24% (expansion).
+Net Migration:
+
+Mean: 2.47% (positive, indicating more immigrants than emigrants).
+Median: Negative, showing a decline compared to earlier periods.
+Variation: High SD due to percentage change measurement.
+Unemployment Rate:
+
+Mean: 5.92% (close to the median of 5.62%).
+Range: 3.49% to 9.71% (narrow).
+Variation: Low SD of 1.63.
+Inflation:
+
+Mean: 3.81% (close to the median).
+Variation: Moderate SD of 2.77.
+Range: -0.36% (deflation) to 13.55% (high inflation).
+
+
+
+
+
+
 
 
 # ** MAIN DATA VISUALIZATIONS
