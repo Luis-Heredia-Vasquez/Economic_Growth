@@ -46,7 +46,8 @@ Net Migration: https://data.worldbank.org/indicator/SM.POP.NETM?locations=us , p
 
 ![normalized_data_all_indicators](https://github.com/user-attachments/assets/f4f96528-ab55-45b3-8893-ef883635d005)
 The gray areas, in the image above,  represent U.S. recessions. Inflation drops during the 1973-75 and 1980-82 recessions due to oil shocks. GDP growth decreases in recessions, influenced by events like the 2008 housing crisis and COVID-19. Unemployment rises during these periods, as seen in 2020 with pandemic-related job losses. Net migration increases during recessions, possibly due to lower living costs. In 1990, the Immigration Act boosted immigration by allocating visas for special immigrants and investors.
- # For full details about the data visualizations and the interpretation see the research paper
+ # For full details about the data visualizations and the interpretation see the research paper (Final Draft - Term Paper- ECON57). It's in the CODE_STATISTICS_ECON57 FOLDER.
+ 
  ![real_gdp_plot_visualization](https://github.com/user-attachments/assets/a7872964-456b-420d-b6ee-4c071929959a)
 
 ![inflation_plot_visualization](https://github.com/user-attachments/assets/7fdf00d5-71df-46e8-8678-fc52f54705a5)
