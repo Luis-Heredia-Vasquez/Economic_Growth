@@ -1,0 +1,772 @@
+---
+title: "The Influence of Net Migration, Unemployment, and Inflation on Economic Growth"
+author: "LUIS HEREDIA"
+date: "2024-12-12"
+output:
+  html_document: default
+  pdf_document: default
+---
+
+## Summary
+
+Load necessary libraries, otherwise the code won't run. If at any point you find a bug, please let us know. The code is presented in chunks, therefore there will be different output based on previous functions. Run one after another.
+
+## Shortcut
+To see the data combined use the command View(combined_data_wide) on the command line interface. The first 4 columns will be composed of the observed and explanatory variables.Besides, the ggsave, command after each plot is executed, since it was used locally. 
+
+
+
+
+```{r}
+library(ggplot2)
+library(dplyr)
+library(readr)
+library(purrr)
+library(tidyr)
+library(broom)
+library(modelr)
+library(readxl)
+```
+
+```{r}
+# Load datasets. These are the data used for the model and graphs 
+inflation <- read.csv("inflation.csv")
+unrate <- read.csv("unrate.csv")
+real_gdp <- read.csv("GDPC1.csv") |>  mutate(DATE = as.Date(DATE))
+world_net_migration<- read_excel("Net_Immigration_world_data.xlsx", sheet = "Sheet1", skip = 3)
+```
+
+```{r}
+#Tidying world_net_immigration data, from the World Bank, to get only values for the US
+US_Net_migration <- world_net_migration |>  filter(`Country Name` == "United States")|> select(-c(`Country Code`, `Indicator Name`, `Indicator Code`)) |> #Remove metadata, what we will not use
+pivot_longer(cols = starts_with("19") | starts_with("20"), 
+               names_to = "Year", values_to = "NetMigration") |> arrange(as.numeric(Year)) |> mutate("DATE"=Year, PercentChange = (NetMigration - lag(NetMigration)) / lag(NetMigration) * 100) |> mutate(DATE = as.Date(paste0(DATE, "-01-01")))|> slice(-1) |> select(DATE,PercentChange)
+US_Net_migration
+
+```
+```{r}
+
+# US NET MIGRATION DATA VISUALIZATION
+US_Net_migration_plot <- ggplot(US_Net_migration, aes(x = DATE, y = PercentChange)) +
+  geom_point(color = "blue", alpha = 0.7, size = 2) +  
+  geom_line(color = "darkgreen", size = 1) +          
+  scale_x_date(
+    date_labels = "%Y",
+    breaks = c(seq(as.Date("1961-01-01"), as.Date("2020-01-01"), by = "5 years"),
+               as.Date("2023-01-01"))
+  ) +
+  geom_smooth(method = "loess", color = "red", linetype = "dashed", size = 1) +
+  labs(title = "Net Migration Growth: 1961 to 2023",
+       x = "Year", y = "Net Migration (% Change)") +
+  theme_minimal(base_size = 14) +
+  theme(
+    plot.title = element_text(hjust = 0.5),  # Center title
+    axis.title.x = element_text(margin = margin(t = 10)),  # x space title
+    axis.title.y = element_text(margin = margin(r = 10)),  # y space title 
+    axis.text.x = element_text(angle = 45, hjust = 1)  # Rotation
+  )
+
+US_Net_migration_plot
+#You may want to save the code locally, change the file location if needed, then run the code which is given below.
+#ggsave(
+#  filename = "C:/Users/luisc/Desktop/CODE_STATISTICS_ECON57/IMAGES/netmigration_plot_visualization.jpg", 
+#  plot = US_Net_migration_plot,
+#  width = 12, 
+ # height = 8, 
+ # dpi = 600
+#)
+```
+
+
+```{r}
+#Date format
+inflation <- inflation |>
+  mutate(DATE = as.Date(DATE))
+
+# inflation_plot, DATA VISUALIZATION
+inflation_plot <- ggplot(inflation, aes(x = DATE, y = FPCPITOTLZGUSA)) +
+  geom_point(color = "blue", alpha = 0.7, size = 2) +  
+  geom_line(color = "darkgreen", size = 1) +          
+  scale_x_date(
+    date_labels = "%Y",
+    breaks = c(seq(as.Date("1961-01-01"), as.Date("2020-01-01"), by = "5 years"),
+               as.Date("2023-01-01")) 
+  ) +
+  geom_smooth(method = "loess", color = "red", linetype = "dashed", size = 1) +
+  labs(title = "Inflation: 1961 to 2023",
+       x = "Year", y = "Inflation (%)") +
+  theme_minimal(base_size = 14) +
+  theme(
+    plot.title = element_text(hjust = 0.5),  # Center title
+    axis.title.x = element_text(margin = margin(t = 10)),  # x space title
+    axis.title.y = element_text(margin = margin(r = 10)),  # y space title 
+    axis.text.x = element_text(angle = 45, hjust = 1)  # Rotation
+  )
+
+inflation_plot
+
+#ggsave(
+#  filename = "C:/Users/luisc/Desktop/CODE_STATISTICS_ECON57/IMAGES/inflation_plot_visualization.jpg", 
+#  plot = inflation_plot,
+#  width = 12, 
+  #height = 8, 
+ # dpi = 600
+#)
+
+```
+
+```{r}
+
+#Date format
+unrate <- unrate |>
+  mutate(DATE = as.Date(DATE))
+
+# DATA VISUALIZATION FOR UNEMPLOYMENT RATE
+
+unrate_plot <- ggplot(unrate, aes(x = DATE, y = UNRATE)) +
+  geom_point(color = "blue", alpha = 0.7, size = 2) +  
+  geom_line(color = "darkgreen", size = 1) +          
+  scale_x_date(
+    date_labels = "%Y",
+    breaks = c(seq(as.Date("1961-01-01"), as.Date("2020-01-01"), by = "5 years"),
+               as.Date("2023-01-01")) 
+  ) +
+  geom_smooth(method = "loess", color = "red", linetype = "dashed", size = 1) +
+  labs(title = "Unemployment Rate Growth: 1961 to 2023",
+       x = "Year", y = "Unemployment Rate Growth (%)") +
+  theme_minimal(base_size = 14) +
+  theme(
+    plot.title = element_text(hjust = 0.5),  
+    axis.title.x = element_text(margin = margin(t = 10)),  
+    axis.title.y = element_text(margin = margin(r = 10)),  
+    axis.text.x = element_text(angle = 45, hjust = 1) 
+  )
+unrate_plot
+
+#ggsave(
+ # filename = "C:/Users/luisc/Desktop/CODE_STATISTICS_ECON57/IMAGES/unrate_plot_visualization.jpg", 
+  #plot = unrate_plot,
+ # width = 12, 
+  #height = 8, 
+  #dpi = 600
+#)
+
+```
+
+```{r}
+
+
+#Date format
+real_gdp<- real_gdp |>
+  mutate(DATE = as.Date(DATE))
+
+# Real GDP, data visualization
+
+real_gdp_plot <- ggplot(real_gdp, aes(x = DATE, y= GDPC1_PC1)) +
+  geom_point(color = "blue", alpha = 0.7, size = 2) +  
+  geom_line(color = "darkgreen", size = 1) +          
+  scale_x_date(
+    date_labels = "%Y",
+    breaks = c(seq(as.Date("1961-01-01"), as.Date("2020-01-01"), by = "5 years"),
+               as.Date("2023-01-01")) 
+  ) +
+  geom_smooth(method = "loess", color = "red", linetype = "dashed", size = 1) +
+  labs(title = "Real GDP Growth: 1961 to 2023",
+       x = "Year", y = "GDP Growth (%)") +
+  theme_minimal(base_size = 14) +
+  theme(
+    plot.title = element_text(hjust = 0.5),  # Center title
+    axis.title.x = element_text(margin = margin(t = 10)), 
+    axis.title.y = element_text(margin = margin(r = 10)),  
+    axis.text.x = element_text(angle = 45, hjust = 1)  
+  )
+real_gdp_plot
+
+#ggsave(
+#  filename = "C:/Users/luisc/Desktop/CODE_STATISTICS_ECON57/IMAGES/real_gdp_plot_visualization.jpg", 
+#  plot = real_gdp_plot,
+#  width = 12, 
+#  height = 8, 
+# dpi = 600
+#)
+
+```
+
+```{r}
+# Combine all data, including US Net Migration Percent Change
+combined_data <- real_gdp |>
+  select(DATE, GDP_Growth = GDPC1_PC1) |>
+  left_join(unrate |> select(DATE, Unemployment_Rate = UNRATE), by = "DATE") |>
+  left_join(inflation |> select(DATE, inflation = FPCPITOTLZGUSA), by = "DATE") |>
+  left_join(US_Net_migration |> rename(Percentage_Net_Migration_Change = PercentChange), by = "DATE") |>
+  pivot_longer(
+    cols = c(GDP_Growth, Unemployment_Rate, inflation, Percentage_Net_Migration_Change),
+    names_to = "Indicator",
+    values_to = "Value"
+  )
+
+# Checking ranges of the indicators, including Net Migration Change
+combined_data_range <- combined_data |>
+  group_by(Indicator) |>
+  summarize(
+    Min = min(Value, na.rm = TRUE),
+    Max = max(Value, na.rm = TRUE)
+  )
+
+combined_data_range
+
+```
+
+
+
+```{r}
+
+combined_data <- combined_data |>
+  group_by(Indicator) |>
+  mutate(Normalized_Value = (Value - mean(Value, na.rm = TRUE)) / sd(Value, na.rm = TRUE)) |>
+  ungroup()
+# Add recession periods, including COVID-19 recession
+recession_periods <- data.frame(
+  start = as.Date(c("1973-01-01", "1980-01-01", "1990-07-01", "2008-01-01", "2020-02-01")),
+  end = as.Date(c("1975-01-01", "1982-11-01", "1991-03-01", "2009-06-01", "2020-04-01")),
+  label = c("1973-75", "1980-82", "1990-91", "2008-09", "COVID-19 (2020)")
+)
+
+# Highlight high and low points (example for GDP Growth)
+highlight_points <- combined_data |>
+  filter(Indicator == "GDP Growth" & (Normalized_Value == max(Normalized_Value) | 
+                                      Normalized_Value == min(Normalized_Value)))
+
+# Enhanced plot with annotations
+overlay_plot_normalized <- ggplot(combined_data, aes(x = DATE, y = Normalized_Value, color = Indicator)) +
+  # Add lines
+  geom_line(size = 0.8, alpha = 0.8) +
+  # Add shaded recession periods
+  geom_rect(data = recession_periods,
+            aes(xmin = start, xmax = end, ymin = -Inf, ymax = Inf),
+            fill = "gray", alpha = 0.2, inherit.aes = FALSE) +
+  # Annotate recession periods
+  geom_text(data = recession_periods,
+            aes(x = start + (end - start) / 2, y = 4.5, label = label),  # Position labels above the lines
+            color = "black", size = 4, inherit.aes = FALSE) +
+  # Highlight high and low points
+  geom_point(data = highlight_points, aes(x = DATE, y = Normalized_Value), 
+             color = "black", size = 3) +
+  # Annotate high and low points
+  geom_text(data = highlight_points, aes(x = DATE, y = Normalized_Value, 
+                                         label = round(Normalized_Value, 2)), 
+            color = "black", hjust = -0.2, vjust = -0.5, size = 4) +
+  # Add labels and formatting
+  labs(
+    title = "Economic and Migration Indicators: 1961 to 2023",
+    x = "Year",
+    y = "Z-Score (Normalized Values)",
+    color = "Indicators"
+  ) +
+  scale_color_manual(
+    values = c("blue", "red", "green", "purple"),
+    labels = c("Inflation", "GDP Growth", "Unemployment Rate", "Net Migration Change")
+  ) +
+  scale_x_date(
+    date_labels = "%Y",
+    breaks = c(seq(as.Date("1961-01-01"), as.Date("2020-01-01"), by = "5 years"),
+               as.Date("2023-01-01"))
+  ) +
+  coord_cartesian(ylim = c(-3, 5)) +
+  theme_minimal(base_size = 16) +
+  theme(
+    plot.title = element_text(hjust = 0.5, size = 18),
+    axis.text.x = element_text(angle = 45, hjust = 1, size = 12),
+    axis.text.y = element_text(size = 12),
+    legend.position = "top",
+    legend.text = element_text(size = 12),
+    legend.title = element_text(size = 14),
+    panel.grid.major = element_line(size = 0.2, color = "gray80"),
+    panel.grid.minor = element_blank()
+  )
+
+# Display the enhanced plot
+overlay_plot_normalized
+
+#ggsave(
+#  filename = "C:/Users/luisc/Desktop/CODE_STATISTICS_ECON57/IMAGES/normalized_data_all_indicators.jpg", 
+# plot = overlay_plot_normalized,
+ # width = 12, 
+#  height = 8, 
+ # dpi = 600
+#)
+
+```
+
+
+```{r}
+
+
+combined_data_wide <- real_gdp |>
+  select(DATE, GDP_Growth = GDPC1_PC1) |>
+  left_join(unrate |> select(DATE, Unemployment_Rate = UNRATE), by = "DATE") |>
+  left_join(inflation |> select(DATE, inflation = FPCPITOTLZGUSA), by = "DATE") |>
+  left_join(US_Net_migration |> rename(Net_Migration = PercentChange), by = "DATE") # Add Net Migration
+
+# Net Migration is the third column
+combined_data_wide <- combined_data_wide |>
+  select(DATE, GDP_Growth, Net_Migration, Unemployment_Rate, inflation)
+
+# Check structure
+head(combined_data_wide)
+
+```
+
+```{r}
+#Summary statistics
+
+library(psych)
+describe(combined_data_wide) |> slice(-1) |> select(-1) |> mutate("observations"=n)|> select(-trimmed,-mad,-range,-n) |>  select(-skew,-kurtosis,-se)|> slice(1:4)
+
+```
+
+```{r}
+# Simple regression
+simple_model <- lm(GDP_Growth ~ Unemployment_Rate, data = combined_data_wide)
+
+# Summary of the simple regression model
+summary(simple_model)
+
+```
+
+```{r}
+data_predictors <- combined_data_wide |> data_grid(Unemployment_Rate)|> add_predictions(simple_model)
+data_predictors
+```
+
+```{r}
+residuals_unemployment <-combined_data_wide |> select(GDP_Growth,Unemployment_Rate)|> add_residuals(simple_model)
+residuals_unemployment
+```
+
+
+
+```{r}
+#This data if for unemployment residuals, you can skeep this part
+joined_predictors_residuals<- data_predictors|> left_join(residuals_unemployment)|> select(Unemployment_Rate,GDP_Growth, pred, resid)
+joined_predictors_residuals
+                                                      
+```
+
+
+
+```{r}
+residuals_unemployment_density <-
+residuals_unemployment |> 
+  ggplot(aes(x = resid)) +
+  
+  geom_density(fill = "blue", alpha = 0.5) +  # Density plot
+  geom_vline(xintercept = 0, linetype = "dashed", color = "red", size = 1) +  # Line at 0
+  labs(
+    title = "Density plot of residuals for unemployment",
+    x = "Residuals",
+    y = "Density"
+  ) + 
+  theme_minimal(base_size = 14) 
+
+residuals_unemployment_density
+
+
+#ggsave(
+# filename = "C:/Users/luisc/Desktop/CODE_STATISTICS_ECON57/IMAGES/residuals_uemployment_density.jpg", 
+  #plot = residuals_unemployment_density,
+  #width = 12, 
+ # height = 8, 
+  #dpi = 600
+#)
+
+  
+
+```
+
+```{r}
+# Extract coefficients from the simple regression model
+coefficients <- coef(simple_model)
+equation <- paste0(
+  "y = ", round(coefficients[1], 2), 
+  " + ", round(coefficients[2], 2), "x"
+)
+
+# observed, predicted data, and equation
+plot_predictors <- ggplot() +
+  # Observed points
+  geom_point(data = combined_data_wide, aes(Unemployment_Rate, GDP_Growth), 
+             color = "blue", alpha = 0.7, size = 3) +
+  # Predicted points
+  geom_point(data = data_predictors, aes(Unemployment_Rate, pred), 
+             color = "red", alpha = 0.7, size = 3) +
+  # Regression line
+  geom_smooth(data = combined_data_wide, aes(Unemployment_Rate, GDP_Growth), 
+              method = "lm", color = "darkblue", se = FALSE) +
+  # Add regression equation
+  annotate("text", 
+           x = min(combined_data_wide$Unemployment_Rate) + 1, 
+           y = max(combined_data_wide$GDP_Growth) - 1, 
+           label = equation, 
+           hjust = 0, size = 5, color = "darkred") +
+  # Labels and title
+  labs(
+    title = "GDP Growth vs Unemployment Rate",
+    x = "Unemployment Rate (%)",
+    y = "GDP Growth (%)",
+    caption = "Blue: Observed Data | Red: Predicted Data"
+  ) +
+  # Minimal theme
+  theme_minimal(base_size = 14) +
+  theme(
+    plot.title = element_text(hjust = 0.5, face = "bold"),
+    axis.title = element_text(face = "bold"),
+    legend.position = "none"
+  )
+plot_predictors
+
+#ggsave(
+# filename = "C:/Users/luisc/Desktop/CODE_STATISTICS_ECON57/IMAGES/UR_REGRESSION.jpg", 
+#plot = plot_predictors,
+# width = 12, 
+# height = 8, 
+# dpi = 600
+#)
+
+
+```
+
+```{r}
+
+# Simple regression
+simple_model_net_migration <- lm(GDP_Growth ~ Net_Migration, data = combined_data_wide)
+
+# Summary of the simple regression model
+summary(simple_model_net_migration)
+
+```
+
+```{r}
+# Extract coefficients from the model
+coefficients <- coef(simple_model_net_migration)
+equation <- paste0(
+  "y = ", round(coefficients[1], 2), 
+  " + ", round(coefficients[2], 2), "x"
+)
+
+# Add predicted values for Net Migration
+combined_data_wide <- combined_data_wide |> 
+  mutate(predicted_net_migration = predict(simple_model_net_migration))
+
+# Plot observed vs. predicted with the regression line
+plot_net_migration <- ggplot() +
+  # Observed points
+  geom_point(data = combined_data_wide, aes(x = Net_Migration, y = GDP_Growth), 
+             color = "blue", alpha = 0.7, size = 3) +
+  # Predicted points
+  geom_point(data = combined_data_wide, aes(x = Net_Migration, y = predicted_net_migration), 
+             color = "red", alpha = 0.7, size = 3) +
+  # Regression line
+  geom_smooth(data = combined_data_wide, aes(x = Net_Migration, y = GDP_Growth), 
+              method = "lm", color = "darkblue", se = FALSE, size = 1) +
+  # Add regression equation
+  annotate("text", 
+           x = min(combined_data_wide$Net_Migration) + 0.5, 
+           y = max(combined_data_wide$GDP_Growth) - 0.5, 
+           label = equation, 
+           hjust = 0, size = 5, color = "darkred") +
+  # Labels and title
+  labs(
+    title = "GDP Growth vs Net Migration",
+    x = "Net Migration (%)",
+    y = "GDP Growth (%)",
+    caption = "Blue: Observed Data | Red: Predicted Data"
+  ) +
+  # Minimal theme
+  theme_minimal(base_size = 14) +
+  theme(
+    plot.title = element_text(hjust = 0.5, face = "bold"),
+    axis.title = element_text(face = "bold"),
+    legend.position = "none"
+  )
+
+# Display the plot
+print(plot_net_migration)
+#ggsave(
+ # filename = "C:/Users/luisc/Desktop/CODE_STATISTICS_ECON57/IMAGES/NET_MIGRATION_REGRESSION.jpg", 
+ # plot = plot_net_migration,
+ # width = 12, 
+ # height = 8, 
+  #dpi = 600
+#)
+
+```
+```{r}
+# Calculate residuals for the Net Migration model
+combined_data_wide <- combined_data_wide |>
+  mutate(residuals_net_migration = GDP_Growth - predicted_net_migration)
+
+# Plot the residuals using a density plot
+net_migration_density<-
+ggplot(combined_data_wide, aes(x = residuals_net_migration)) +
+  geom_density(fill = "blue", alpha = 0.5) +  # Density plot
+  geom_vline(xintercept = 0, linetype = "dashed", color = "red", size = 1) +  # Line at 0
+  labs(
+    title = "Density Plot of Residuals for Net Migration Model",
+    x = "Residuals (Net Migration Model)",
+    y = "Density"
+  ) +
+  theme_minimal(base_size = 14)
+net_migration_density
+#ggsave(
+ # filename = "C:/Users/luisc/Desktop/CODE_STATISTICS_ECON57/IMAGES/NET_MIGRATION_DENSITY.jpg", 
+ # plot = net_migration_density,
+ # width = 12, 
+  #height = 8, 
+  #dpi = 600
+#)
+
+```
+
+```{r}
+# Simple regression for inflation
+simple_model_inflation <- lm(GDP_Growth ~ inflation, data = combined_data_wide)
+
+# Summary of the simple regression model
+summary(simple_model_inflation)
+
+
+```
+
+```{r}
+# Extract coefficients from the model
+coefficients_cpi <- coef(simple_model_inflation)
+equation_cpi <- paste0(
+  "y = ", round(coefficients_cpi[1], 2), 
+  " + ", round(coefficients_cpi[2], 2), "x"
+)
+
+# Add predicted values for CPI Growth
+combined_data_wide <- combined_data_wide |>
+  mutate(predicted_inflation = predict(simple_model_inflation))
+
+# Plot observed vs. predicted with the regression line
+plot_inflation <- ggplot() +
+  # Observed points
+  geom_point(data = combined_data_wide, aes(x = inflation, y = GDP_Growth), 
+             color = "blue", alpha = 0.7, size = 3) +
+  # Predicted points
+  geom_point(data = combined_data_wide, aes(x = inflation, y = predicted_inflation), 
+             color = "red", alpha = 0.7, size = 3) +
+  # Regression line
+  geom_smooth(data = combined_data_wide, aes(x = inflation, y = GDP_Growth), 
+              method = "lm", color = "darkblue", se = FALSE, size = 1) +
+  # Add regression equation
+  annotate(
+    "text", 
+    x = min(combined_data_wide$inflation) + 0.5, 
+    y = max(combined_data_wide$GDP_Growth) - 0.5, 
+    label = equation_cpi, 
+    hjust = 0, size = 5, color = "darkred"
+  ) +
+  # Labels and title
+  labs(
+    title = "GDP Growth vs Inflation",
+    x = "Inflation (%)",
+    y = "GDP Growth (%)",
+    caption = "Blue: Observed Data | Red: Predicted Data"
+  ) +
+  # Minimal theme
+  theme_minimal(base_size = 14) +
+  theme(
+    plot.title = element_text(hjust = 0.5, face = "bold"),
+    axis.title = element_text(face = "bold"),
+    legend.position = "none"
+  )
+
+# Display the plot
+print(plot_inflation)
+#ggsave(
+#  filename = "C:/Users/luisc/Desktop/CODE_STATISTICS_ECON57/IMAGES/plot_regression_inflation.jpg", 
+#  plot = plot_inflation,
+#  width = 12, 
+#  height = 8, 
+#  dpi = 600
+#)
+
+
+```
+
+
+```{r}
+
+# Calculate residuals for the CPI Growth model
+combined_data_wide <- combined_data_wide |>
+  mutate(residuals_inflation = GDP_Growth - predicted_inflation)
+
+# Plot the residuals using a density plot
+inflation_density<-
+ggplot(combined_data_wide, aes(x = residuals_inflation)) +
+  geom_density(fill = "blue", alpha = 0.5) +  # Density plot
+  geom_vline(xintercept = 0, linetype = "dashed", color = "red", size = 1) +  # Line at 0
+  labs(
+    title = "Density Plot of Residuals for Inflation",
+    x = "Residuals (inflation Model)",
+    y = "Density"
+  ) +
+  theme_minimal(base_size = 14)
+inflation_density
+
+#ggsave(
+ # filename = "C:/Users/luisc/Desktop/CODE_STATISTICS_ECON57/IMAGES/inflation_density.jpg", 
+ # plot = inflation_density,
+ # width = 12, 
+ # height = 8, 
+ # dpi = 600
+#)
+
+
+```
+
+```{r}
+
+# Multiple regression model with CPI Growth, Unemployment Rate, and Net Migration
+multi_model <- lm(GDP_Growth ~ Net_Migration + Unemployment_Rate + inflation, data = combined_data_wide)
+
+# Add predicted values from the multiple model to the dataset
+combined_data_wide <- combined_data_wide |>
+  mutate(Predicted_GDP = predict(multi_model))  # Column for multiple model predictions
+
+head(combined_data_wide)
+
+```
+
+
+
+
+```{r}
+# Summary of the multi regression model
+summary(multi_model)
+
+```
+
+
+```{r}
+# Ensure no missing data
+combined_data_wide <- combined_data_wide |>
+  filter(!is.na(Net_Migration), !is.na(Unemployment_Rate), !is.na(inflation))
+
+# Add predicted values and residuals from the multivariable model
+combined_data_wide <- combined_data_wide |>
+  mutate(
+    Predicted_GDP_Multimodel = predict(multi_model),  # Predicted GDP from the model
+    residuals = GDP_Growth - Predicted_GDP_Multimodel  # Residuals (Observed - Predicted)
+  )
+
+# Identify outliers by residuals (top 5% largest residuals)
+outliers <- combined_data_wide |>
+  filter(abs(residuals) > quantile(abs(residuals), 0.95)) |>
+  mutate(outlier_id = row_number())  # Assign unique IDs to outliers
+
+# Extract coefficients and create the equation
+coefficients <- coef(multi_model)
+equation <- paste0(
+  "y = ", round(coefficients[1], 2), 
+  " + ", round(coefficients[2], 4), " * Net_Migration",
+  " + ", round(coefficients[3], 4), " * Unemployment_Rate",
+  " + ", round(coefficients[4], 4), " * Inflation"
+)
+
+# Plot observed vs. predicted with explicit differentiation
+multi_plot <- ggplot(combined_data_wide) +
+  # Observed values (y-axis)
+  geom_point(aes(x = Predicted_GDP_Multimodel, y = GDP_Growth, color = "Observed"), 
+             alpha = 0.7, size = 3) +
+  # Predicted values (x-axis)
+  geom_point(aes(x = Predicted_GDP_Multimodel, y = Predicted_GDP_Multimodel, color = "Predicted"), 
+             alpha = 0.7, size = 3) +
+  # Residual lines with blue color
+  geom_segment(aes(x = Predicted_GDP_Multimodel, y = Predicted_GDP_Multimodel, 
+                   xend = Predicted_GDP_Multimodel, yend = GDP_Growth), 
+               color = "darkblue", linetype = "dotted", alpha = 0.7) +
+  # Perfect fit line (45-degree)
+  geom_abline(slope = 1, intercept = 0, color = "black", linetype = "dashed", size = 1) +
+  # Regression equation
+  annotate("text", 
+           x = min(combined_data_wide$Predicted_GDP_Multimodel) + 0.5, 
+           y = max(combined_data_wide$GDP_Growth) - 1, 
+           label = equation, 
+           hjust = 0, size = 3, color = "darkred") +
+  # Highlight outliers
+  geom_text(data = outliers, aes(x = Predicted_GDP_Multimodel, y = GDP_Growth, label = outlier_id), 
+            hjust = -0.3, vjust = -0.5, color = "darkred", size = 3) +
+  # Color scale for observed and predicted points
+  scale_color_manual(values = c("Observed" = "orange", "Predicted" = "purple"), name = "Point Type") +
+  # Labels and title
+  labs(
+    title = "Multivariable Regression: Observed vs. Predicted GDP Growth",
+    x = "Predicted GDP Growth (Multimodel) (%)",
+    y = "Observed GDP Growth (%)",
+    caption = "Orange: Observed GDP Growth | Purple: Predicted GDP Growth | Blue lines: Residuals"
+  ) +
+  theme_minimal(base_size = 14)
+# Display the plot
+print(multi_plot)
+
+#ggsave(
+#  filename = "C:/Users/luisc/Desktop/CODE_STATISTICS_ECON57/IMAGES/multi_regression_plot_high_quality.jpg", 
+#  plot = multi_plot,
+#  width = 12, 
+#  height = 8, 
+# dpi = 600
+#)
+
+
+```
+
+
+```{r}
+# Add predicted GDP Growth and calculate residuals
+combined_data_wide <- combined_data_wide |>
+  mutate(
+    Predicted_GDP = predict(multi_model),  # Predicted values
+    residuals_multi_model = GDP_Growth - Predicted_GDP  # Residuals
+  )
+
+# Plot the residuals using a density plot
+residual_densisty <-
+ggplot(combined_data_wide, aes(x = residuals_multi_model)) +
+  geom_density(fill = "blue", alpha = 0.5) +  # Density plot
+  geom_vline(xintercept = 0, linetype = "dashed", color = "red", size = 1) +  # Line at 0
+  labs(
+    title = "Density Plot of Residuals for Multivariable Model",
+    x = "Residuals (Multivariable Model)",
+    y = "Density"
+  ) +
+  theme_minimal(base_size = 14)
+residual_densisty
+
+#ggsave(
+#  filename = "C:/Users/luisc/Desktop/CODE_STATISTICS_ECON57/IMAGES/residual_multimodel.jpg", 
+ # plot = residual_densisty, 
+#  width = 12, 
+ # height = 8, 
+ # dpi = 600
+#)
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
